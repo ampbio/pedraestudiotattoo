@@ -3,6 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'none';
+  script-src 'sha256-BfXRIpq7ZwxESzDgckDoZ5LOMEUtyenHMD6TfePC48o=' https://cdnjs.cloudflare.com;
+  worker-src 'self' https://cdnjs.cloudflare.com;
+  style-src 'unsafe-inline' https://fonts.googleapis.com;
+  font-src https://fonts.gstatic.com;
+  img-src 'self' data:;
+  frame-src 'self' https://www.google.com;
+  connect-src 'self';
+  base-uri 'none';
+  form-action 'none';
+">
 <title>Pedra Estúdio — Tattoo Guest House</title>
 <link rel="icon" type="image/png" href="imagem/pedrinhafav.png">
 
@@ -13,6 +25,8 @@
 <meta property="og:description" content="Estúdio de tatuagem e Guest House para tatuadores da região e de artistas que estão de passagem por Imbituba - Santa Catarina. Para mais informações, acesse esse link!">
 <meta property="og:image" content="https://ampbio.github.io/pedraestudiotattoo/imagem/pedrathumb.png">
 <meta property="og:image:alt" content="Pedra Estúdio Tattoo Guest House">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:site_name" content="Pedra Estúdio">
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
@@ -103,6 +117,37 @@
     width: min(130px, 34vw);
     height: auto;
     display: block;
+    transition: transform 0.3s ease;
+  }
+
+  .mascot-img:hover {
+    transform: scale(1.06);
+  }
+
+  /* ── ÍCONES SOCIAIS DO TOPO (entre o mascote e o marquee) ── */
+  .social-row-top {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 22px;
+    margin-top: 4px;
+    margin-bottom: 28px;
+    opacity: 0;
+    animation: fadeUp 0.9s 0.55s forwards;
+  }
+
+  .social-icon-top {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--stone);
+    transition: color 0.2s, transform 0.25s;
+  }
+
+  .social-icon-top:hover,
+  .social-icon-top:focus-visible {
+    color: var(--black);
+    transform: translateY(-2px);
   }
 
   /* ── LINKS / BUTTONS ── */
@@ -204,27 +249,6 @@
     animation: fadeIn 1s 1.4s forwards;
   }
 
-  .social-row {
-    display: flex;
-    justify-content: center;
-    gap: 24px;
-    margin-bottom: 28px;
-  }
-
-  .social-link {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    font-size: 11px;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--stone);
-    text-decoration: none;
-    transition: color 0.2s;
-  }
-
-  .social-link:hover { color: var(--black); }
-
   .footer-copy {
     font-size: 10px;
     letter-spacing: 0.15em;
@@ -258,6 +282,7 @@
     overflow: hidden;
     white-space: nowrap;
     position: relative;
+    cursor: pointer;
   }
 
   .strip::before,
@@ -286,6 +311,10 @@
     animation: ticker 22s linear infinite;
   }
 
+  .strip.is-paused .ticker-track {
+    animation-play-state: paused;
+  }
+
   .ticker-track span {
     padding: 0 18px;
     flex-shrink: 0;
@@ -302,10 +331,9 @@
   }
 
   /* ── MINIMAP ── */
+  /* fica dentro de <nav class="links">, que já define o max-width/padding — 
+     aqui só preenche 100% da largura disponível, igual aos botões */
   .minimap-wrap {
-    max-width: 420px;
-    margin: 0 auto;
-    padding: 0 28px;
     width: 100%;
     opacity: 0;
     animation: fadeUp 0.7s 1.3s forwards;
@@ -364,6 +392,291 @@
     pointer-events: auto;
   }
 
+  /* ── OVERLAYS (extraído dos estilos inline) ── */
+  .ov-base {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    flex-direction: column;
+    align-items: center;
+  }
+  #gallery-overlay {
+    background: rgba(0,0,0,0.92);
+    justify-content: center;
+  }
+  #cuidados-overlay,
+  #artists-overlay {
+    justify-content: flex-start;
+    overflow-y: auto;
+    padding: 64px 16px 48px;
+    box-sizing: border-box;
+  }
+  #cuidados-overlay { background: rgba(0,0,0,0.95); overflow-x: hidden; }
+  #artists-overlay { background: rgba(0,0,0,0.93); padding: 64px 24px 48px; }
+
+  .ov-close {
+    position: fixed;
+    top: 20px;
+    right: 24px;
+    background: none;
+    border: none;
+    color: var(--black);
+    font-size: 28px;
+    cursor: pointer;
+    line-height: 1;
+    font-family: 'Outfit', sans-serif;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    z-index: 2;
+  }
+  .ov-close:hover, .ov-close:focus-visible { opacity: 1; }
+
+  .ov-eyebrow {
+    font-family: 'Outfit', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--stone);
+    margin-bottom: 10px;
+  }
+  .ov-title {
+    font-family: 'Playfair Display', serif;
+    color: var(--black);
+    margin-bottom: 28px;
+    text-align: center;
+    font-weight: 400;
+    /* o texto não tem clique próprio: deixa o clique "atravessar"
+       o espaço vazio ao redor pra fechar o modal corretamente */
+    pointer-events: none;
+  }
+  .ov-eyebrow {
+    pointer-events: none;
+  }
+  #cuidados-title { font-size: clamp(20px,5vw,30px); }
+  #artists-title { font-size: clamp(22px,5vw,32px); margin-bottom: 40px; }
+
+  #pdf-viewer-wrap { width: 100%; max-width: 700px; flex: 1; }
+  #pdf-native { display: block; width: 100%; }
+
+  .ov-pdf-btn {
+    margin-top: 24px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 28px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1px solid var(--black);
+    color: var(--black);
+    text-decoration: none;
+    background: transparent;
+    transition: background 0.3s, color 0.3s;
+    cursor: pointer;
+  }
+  .ov-pdf-btn:hover, .ov-pdf-btn:focus-visible {
+    background: var(--black);
+    color: var(--cream);
+  }
+
+  .artist-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    width: 100%;
+    max-width: 860px;
+    /* container só serve pra organizar o layout — o espaço vazio nele
+       precisa "deixar passar" o clique pra fechar o modal (fecha no fundo) */
+    pointer-events: none;
+  }
+  .artist-card {
+    /* os cards em si continuam clicáveis normalmente (fotos, links, botão) */
+    pointer-events: auto;
+  }
+
+  /* Telas maiores (desktop/notebook): grade fixa 2x2 em vez de 3x1,
+     mais compacta para caber na tela sem precisar rolar */
+  @media (min-width: 640px) {
+    .artist-cards {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(220px, 260px));
+      gap: 14px;
+      justify-content: center;
+    }
+    #artists-overlay {
+      padding: 40px 24px 24px;
+      justify-content: center;
+    }
+    #artists-title {
+      margin-bottom: 22px;
+      font-size: clamp(20px, 2.6vw, 28px);
+    }
+    #artists-overlay .ov-eyebrow {
+      margin-bottom: 6px;
+    }
+    .artist-card {
+      padding: 18px 18px 16px;
+      gap: 8px;
+    }
+    .artist-photo {
+      width: 80px;
+      height: 80px;
+    }
+    .artist-name {
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
+    .artist-ig {
+      font-size: 10px;
+    }
+    .artist-cta {
+      padding: 10px 14px;
+      font-size: 10px;
+      margin-top: 2px;
+    }
+  }
+  .artist-card {
+    background: #1e1d1d;
+    border: 1px solid var(--black);
+    width: min(260px, 85vw);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 24px 24px;
+    gap: 12px;
+  }
+  .artist-photo {
+    width: 110px;
+    height: 110px;
+    border: 1px solid var(--stone);
+    overflow: hidden;
+    background: #2a2929;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .artist-photo img { width: 100%; height: 100%; object-fit: cover; }
+  .artist-photo-fallback {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--stone);
+    text-transform: uppercase;
+  }
+  .artist-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    color: var(--black);
+    margin-bottom: 4px;
+  }
+  .artist-ig {
+    font-family: 'Outfit', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--stone);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.2s;
+  }
+  .artist-ig:hover, .artist-ig:focus-visible { color: var(--black); }
+  .artist-cta {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 16px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: var(--black);
+    color: var(--cream);
+    text-decoration: none;
+    margin-top: 4px;
+    transition: background 0.25s, color 0.25s;
+  }
+  .artist-cta:hover, .artist-cta:focus-visible { background: #d8d9d4; }
+
+  .gallery-counter {
+    position: absolute;
+    top: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Outfit', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--stone);
+  }
+  .gallery-img {
+    max-width: min(88vw, 700px);
+    max-height: 72vh;
+    object-fit: contain;
+    display: block;
+    opacity: 0;
+  }
+  .gallery-nav { display: flex; gap: 32px; margin-top: 28px; align-items: center; }
+  .gallery-arrow {
+    background: none;
+    border: 1px solid var(--black);
+    color: var(--black);
+    width: 44px;
+    height: 44px;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.25s, color 0.25s;
+  }
+  .gallery-arrow:hover, .gallery-arrow:focus-visible {
+    background: var(--black);
+    color: var(--cream);
+  }
+  .gallery-dots { display: flex; gap: 8px; align-items: center; }
+  .gallery-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    display: inline-block; cursor: pointer;
+    background: var(--stone);
+    transition: background 0.2s;
+    border: none; padding: 0;
+  }
+  .gallery-dot.is-active { background: var(--black); }
+
+  .pdf-loading {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 200px; gap: 12px; color: var(--stone);
+    font-family: 'Outfit', sans-serif; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+  }
+  .pdf-error {
+    color: var(--stone); font-family: 'Outfit', sans-serif; font-size: 12px;
+    text-align: center; padding: 20px;
+  }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .pdf-spinner { animation: spin 1s linear infinite; }
+
+  .footer-credit {
+    margin-top: 10px;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--stone);
+    font-family: 'Outfit', sans-serif;
+  }
+  .footer-credit a {
+    color: #F26522;
+    text-decoration: none;
+    transition: opacity 0.2s;
+  }
+  .footer-credit a:hover, .footer-credit a:focus-visible { opacity: 0.75; }
+
 </style>
 </head>
 <body>
@@ -379,7 +692,22 @@
   <img src="imagem/pedrinha1.png" alt="Pedrinha" class="mascot-img">
 </div>
 
-<div class="strip">
+<div class="social-row-top">
+  <a href="https://www.instagram.com/pedraestudio.tattoo/" target="_blank" rel="noopener noreferrer" class="social-icon-top" aria-label="Instagram">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.8"/>
+      <circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.8"/>
+      <circle cx="17.5" cy="6.5" r="1" fill="currentColor"/>
+    </svg>
+  </a>
+  <a href="https://wa.me/5548999899588" target="_blank" rel="noopener noreferrer" class="social-icon-top" aria-label="WhatsApp">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path fill="currentColor" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.981.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.885-9.885 9.885M20.52 3.449C18.24 1.245 15.24 0 12.045 0 5.463 0 .16 5.304.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.89 11.89 0 0 0 5.683 1.448h.005c6.585 0 11.89-5.305 11.893-11.893a11.821 11.821 0 0 0-3.423-8.452"/>
+    </svg>
+  </a>
+</div>
+
+<div class="strip" id="tickerStrip" role="button" tabindex="0" aria-pressed="false" aria-label="Pausar ou retomar a faixa de rolagem">
   <div class="ticker-track">
     <span>Tattoo Guest House</span>
     <span class="dot">✦</span>
@@ -427,25 +755,25 @@
 <!-- CTA Buttons -->
 <nav class="links" aria-label="Links principais">
 
-  <a href="#" class="btn btn--primary" onclick="openArtists(); return false;">
+  <button type="button" class="btn btn--primary" id="btnOpenArtists" aria-haspopup="dialog" aria-controls="artists-overlay">
     <span>Agende seu horário aqui</span>
     <img src="imagem/pedrinha2.png" class="btn-icon" alt="">
-  </a>
+  </button>
 
   <a href="https://wa.me/5548999899588?text=Olá!%20Tenho%20interesse%20em%20ser%20um%20Guest%20no%20Pedra%20Estúdio.%20Poderia%20me%20passar%20mais%20informações?" target="_blank" rel="noopener noreferrer" class="btn">
     <span>Seja um Guest no Pedra</span>
     <img src="imagem/pedrinha3.png" class="btn-icon" alt="">
   </a>
 
-  <a href="#" class="btn" onclick="openGallery(); return false;">
+  <button type="button" class="btn" id="btnOpenGallery" aria-haspopup="dialog" aria-controls="gallery-overlay">
     <span>Conheça o estúdio por dentro</span>
     <img src="imagem/pedrinha4.png" class="btn-icon" alt="">
-  </a>
+  </button>
 
-  <a href="#" class="btn" onclick="openCuidados(); return false;">
+  <button type="button" class="btn" id="btnOpenCuidados" aria-haspopup="dialog" aria-controls="cuidados-overlay">
     <span>Cuidados com sua Tattoo</span>
     <img src="imagem/pedrinha5.png" class="btn-icon" alt="">
-  </a>
+  </button>
 
   <a href="https://www.google.com/maps/search/?api=1&query=Pedra+Est%C3%BAdio+Tattoo+guest+house&query_place_id=0x0:0x7b6d21b45f32b2de" target="_blank" rel="noopener noreferrer" class="btn">
     <span>Nossa localização</span>
@@ -456,9 +784,11 @@
   <div class="minimap-wrap">
     <iframe
       class="minimap"
+      title="Localização do Pedra Estúdio no mapa"
       loading="lazy"
       allowfullscreen
       referrerpolicy="no-referrer-when-downgrade"
+      sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
       src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3536!2d-48.6709!3d-28.2317!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x7b6d21b45f32b2de!2sPedra%20Est%C3%BAdio%20-%20Tattoo%20guest%20house!5e0!3m2!1spt-BR!2sbr!4v1700000000000"
     ></iframe>
   </div>
@@ -466,97 +796,33 @@
 </nav>
 
 <footer>
-  <div class="social-row">
-    <a href="https://www.instagram.com/pedraestudio.tattoo/" target="_blank" rel="noopener noreferrer" class="social-link">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.8"/>
-        <circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.8"/>
-        <circle cx="17.5" cy="6.5" r="1" fill="currentColor"/>
-      </svg>
-      Instagram
-    </a>
-    <a href="https://wa.me/5548999899588" target="_blank" rel="noopener noreferrer" class="social-link">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.978-1.41A9.953 9.953 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-        <path d="M8.5 9.5c.5 1 1.5 3 3.5 4s3-1 3-1-.5-1.5-1-1.5S13 12 12.5 12 10 10 9.5 9c-.5-1 0-1.5 0-1.5H8.5S8 8.5 8.5 9.5z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      WhatsApp
-    </a>
-  </div>
   <p class="footer-copy">© 2026 Pedra Estúdio — Tattoo Guest House</p>
-  <p style="margin-top:10px;font-size:10px;letter-spacing:0.15em;color:var(--stone);font-family:'Outfit',sans-serif;">
-    Website desenvolvido por <a href="https://amplifying.com.br/servicos" target="_blank" rel="noopener noreferrer" style="color:#F26522;text-decoration:none;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.75'" onmouseout="this.style.opacity='1'">AMPLIFYING</a>
+  <p class="footer-credit">
+    Website desenvolvido por <a href="https://amplifying.com.br/servicos" target="_blank" rel="noopener noreferrer">AMPLIFYING</a>
   </p>
 </footer>
 
 
 <!-- PDF CUIDADOS OVERLAY -->
-<div id="cuidados-overlay" class="overlay-fade" style="
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.95);
-  z-index:9999;
-  flex-direction:column;
-  align-items:center;
-  justify-content:flex-start;
-  overflow-y:auto;
-  overflow-x:hidden;
-  padding: 64px 16px 48px;
-  box-sizing:border-box;
-">
+<div id="cuidados-overlay" class="overlay-fade ov-base" role="dialog" aria-modal="true" aria-labelledby="cuidados-title" tabindex="-1">
 
   <!-- Close -->
-  <button onclick="closeCuidados()" style="
-    position:fixed;
-    top:20px;
-    right:24px;
-    background:none;
-    border:none;
-    color:#EDEEE9;
-    font-size:28px;
-    cursor:pointer;
-    line-height:1;
-    font-family:'Outfit',sans-serif;
-    opacity:0.7;
-    transition:opacity 0.2s;
-    z-index:2;
-  " onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">✕</button>
+  <button type="button" class="ov-close" id="btnCloseCuidados" aria-label="Fechar">✕</button>
 
   <!-- Title -->
-  <p style="font-family:'Outfit',sans-serif;font-size:10px;letter-spacing:0.35em;text-transform:uppercase;color:#A8A6A3;margin-bottom:10px;">Guia completo</p>
-  <h2 style="font-family:'Playfair Display',serif;font-size:clamp(20px,5vw,30px);color:#EDEEE9;margin-bottom:28px;text-align:center;font-weight:400;">Cuidados com sua Tattoo</h2>
+  <p class="ov-eyebrow">Guia completo</p>
+  <h2 class="ov-title" id="cuidados-title">Cuidados com sua Tattoo</h2>
 
   <!-- PDF viewer container -->
-  <div id="pdf-viewer-wrap" style="
-    width: 100%;
-    max-width: 700px;
-    flex: 1;
-  ">
-    <div id="pdf-native" style="display:block;width:100%;">
+  <div id="pdf-viewer-wrap">
+    <div id="pdf-native">
       <!-- preenchido via JS -->
     </div>
   </div>
 
   <!-- Open in new tab button -->
-  <a id="pdf-open-btn" href="imagem/cuidados.pdf" target="_blank" rel="noopener noreferrer" style="
-    margin-top:24px;
-    display:inline-flex;
-    align-items:center;
-    gap:10px;
-    padding:16px 28px;
-    font-family:'Montserrat',sans-serif;
-    font-size:11px;
-    font-weight:600;
-    letter-spacing:0.1em;
-    text-transform:uppercase;
-    border:1px solid #EDEEE9;
-    color:#EDEEE9;
-    text-decoration:none;
-    transition:background 0.3s, color 0.3s;
-    cursor:pointer;
-  " onmouseover="this.style.background='#EDEEE9';this.style.color='#151414'" onmouseout="this.style.background='transparent';this.style.color='#EDEEE9'">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <a id="pdf-open-btn" href="imagem/cuidados.pdf" target="_blank" rel="noopener noreferrer" class="ov-pdf-btn">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
       <polyline points="15 3 21 3 21 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
       <line x1="10" y1="14" x2="21" y2="3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -567,218 +833,78 @@
 </div>
 
 <!-- ARTISTS OVERLAY -->
-<div id="artists-overlay" class="overlay-fade" style="
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.93);
-  z-index:9999;
-  flex-direction:column;
-  align-items:center;
-  justify-content:flex-start;
-  overflow-y:auto;
-  padding: 64px 24px 48px;
-">
+<div id="artists-overlay" class="overlay-fade ov-base" role="dialog" aria-modal="true" aria-labelledby="artists-title" tabindex="-1">
 
   <!-- Close -->
-  <button onclick="closeArtists()" style="
-    position:fixed;
-    top:20px;
-    right:24px;
-    background:none;
-    border:none;
-    color:#EDEEE9;
-    font-size:28px;
-    cursor:pointer;
-    line-height:1;
-    font-family:'Outfit',sans-serif;
-    opacity:0.7;
-    transition:opacity 0.2s;
-    z-index:2;
-  " onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">✕</button>
+  <button type="button" class="ov-close" id="btnCloseArtists" aria-label="Fechar">✕</button>
 
   <!-- Title -->
-  <p style="font-family:'Outfit',sans-serif;font-size:10px;letter-spacing:0.35em;text-transform:uppercase;color:#A8A6A3;margin-bottom:10px;">Escolha seu tatuador</p>
-  <h2 style="font-family:'Playfair Display',serif;font-size:clamp(22px,5vw,32px);color:#EDEEE9;margin-bottom:40px;text-align:center;font-weight:400;">Nossos Artistas</h2>
+  <p class="ov-eyebrow">Escolha seu tatuador</p>
+  <h2 class="ov-title" id="artists-title">Nossos Artistas</h2>
 
   <!-- Cards -->
-  <div style="
-    display:flex;
-    flex-wrap:wrap;
-    gap:20px;
-    justify-content:center;
-    width:100%;
-    max-width:860px;
-  ">
+  <div class="artist-cards">
 
     <!-- Card 1 -->
-    <div style="
-      background:#1e1d1d;
-      border:1px solid #EDEEE9;
-      width:min(260px,85vw);
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      padding:28px 24px 24px;
-      gap:12px;
-    ">
-      <div style="
-        width:110px;height:110px;
-        border:1px solid #A8A6A3;
-        overflow:hidden;
-        background:#2a2929;
-        display:flex;align-items:center;justify-content:center;
-      ">
-        <img src="imagem/card1.png" alt="Foto artista 1" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=\'font-size:10px;letter-spacing:0.1em;color:#A8A6A3;text-transform:uppercase\'>foto</span>'" style="width:100%;height:100%;object-fit:cover;">
+    <div class="artist-card">
+      <div class="artist-photo">
+        <img src="imagem/card1.png" alt="Foto artista 1" class="js-artist-photo">
       </div>
-        <p style="font-family:'Playfair Display',serif;font-size:16px;color:#EDEEE9;margin-bottom:4px;">Patrício Siqueira Jr</p>
-      <a href="https://instagram.com/patricio.artetattoo" target="_blank" rel="noopener noreferrer" style="
-        font-family:'Outfit',sans-serif;font-size:11px;letter-spacing:0.15em;
-        text-transform:uppercase;color:#A8A6A3;text-decoration:none;
-        display:flex;align-items:center;gap:6px;transition:color 0.2s;
-      " onmouseover="this.style.color='#EDEEE9'" onmouseout="this.style.color='#A8A6A3'">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.8"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>
+      <p class="artist-name">Patrício Siqueira Jr</p>
+      <a href="https://instagram.com/patricio.artetattoo" target="_blank" rel="noopener noreferrer" class="artist-ig">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.8"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>
         @patricio.artetattoo
       </a>
-      <a href="https://wa.me/5548999899588?text=Olá!%20Gostaria%20de%20agendar%20um%20horário." target="_blank" rel="noopener noreferrer" style="
-        width:100%;
-        display:flex;align-items:center;justify-content:center;gap:8px;
-        padding:12px 16px;
-        font-family:'Outfit',sans-serif;font-size:11px;font-weight:500;
-        letter-spacing:0.12em;text-transform:uppercase;
-        background:#EDEEE9;color:#151414;text-decoration:none;
-        margin-top:4px;transition:background 0.25s,color 0.25s;
-      " onmouseover="this.style.background='#d8d9d4'" onmouseout="this.style.background='#EDEEE9'">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.978-1.41A9.953 9.953 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" stroke="#25D366" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      <a href="https://wa.me/5548999899588?text=Olá!%20Gostaria%20de%20agendar%20um%20horário." target="_blank" rel="noopener noreferrer" class="artist-cta">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.978-1.41A9.953 9.953 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" stroke="#25D366" stroke-width="1.8" stroke-linejoin="round"/></svg>
         Agende agora!
       </a>
     </div>
 
     <!-- Card 2 -->
-    <div style="
-      background:#1e1d1d;
-      border:1px solid #EDEEE9;
-      width:min(260px,85vw);
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      padding:28px 24px 24px;
-      gap:12px;
-    ">
-      <div style="
-        width:110px;height:110px;
-        border:1px solid #A8A6A3;
-        overflow:hidden;
-        background:#2a2929;
-        display:flex;align-items:center;justify-content:center;
-      ">
-        <img src="imagem/card2.png" alt="Foto artista 2" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=\'font-size:10px;letter-spacing:0.1em;color:#A8A6A3;text-transform:uppercase\'>foto</span>'" style="width:100%;height:100%;object-fit:cover;">
+    <div class="artist-card">
+      <div class="artist-photo">
+        <img src="imagem/card2.png" alt="Foto artista 2" class="js-artist-photo">
       </div>
-        <p style="font-family:'Playfair Display',serif;font-size:16px;color:#EDEEE9;margin-bottom:4px;">Luiz Ricardo</p>
-      <a href="https://instagram.com/lrminktattoo" target="_blank" rel="noopener noreferrer" style="
-        font-family:'Outfit',sans-serif;font-size:11px;letter-spacing:0.15em;
-        text-transform:uppercase;color:#A8A6A3;text-decoration:none;
-        display:flex;align-items:center;gap:6px;transition:color 0.2s;
-      " onmouseover="this.style.color='#EDEEE9'" onmouseout="this.style.color='#A8A6A3'">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.8"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>
+      <p class="artist-name">Luiz Ricardo</p>
+      <a href="https://instagram.com/lrminktattoo" target="_blank" rel="noopener noreferrer" class="artist-ig">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.8"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>
         @lrminktattoo
       </a>
-      <a href="https://wa.me/5548988360468?text=Olá!%20Gostaria%20de%20agendar%20um%20horário." target="_blank" rel="noopener noreferrer" style="
-        width:100%;
-        display:flex;align-items:center;justify-content:center;gap:8px;
-        padding:12px 16px;
-        font-family:'Outfit',sans-serif;font-size:11px;font-weight:500;
-        letter-spacing:0.12em;text-transform:uppercase;
-        background:#EDEEE9;color:#151414;text-decoration:none;
-        margin-top:4px;transition:background 0.25s,color 0.25s;
-      " onmouseover="this.style.background='#d8d9d4'" onmouseout="this.style.background='#EDEEE9'">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.978-1.41A9.953 9.953 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" stroke="#25D366" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      <a href="https://wa.me/5548988360468?text=Olá!%20Gostaria%20de%20agendar%20um%20horário." target="_blank" rel="noopener noreferrer" class="artist-cta">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.978-1.41A9.953 9.953 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" stroke="#25D366" stroke-width="1.8" stroke-linejoin="round"/></svg>
         Agende agora!
       </a>
     </div>
 
     <!-- Card 3 -->
-    <div style="
-      background:#1e1d1d;
-      border:1px solid #EDEEE9;
-      width:min(260px,85vw);
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      padding:28px 24px 24px;
-      gap:12px;
-    ">
-      <div style="
-        width:110px;height:110px;
-        border:1px solid #A8A6A3;
-        overflow:hidden;
-        background:#2a2929;
-        display:flex;align-items:center;justify-content:center;
-      ">
-        <img src="imagem/card3.png" alt="Foto artista 3" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=\'font-size:10px;letter-spacing:0.1em;color:#A8A6A3;text-transform:uppercase\'>foto</span>'" style="width:100%;height:100%;object-fit:cover;">
+    <div class="artist-card">
+      <div class="artist-photo">
+        <img src="imagem/card3.png" alt="Foto artista 3" class="js-artist-photo">
       </div>
-        <p style="font-family:'Playfair Display',serif;font-size:16px;color:#EDEEE9;margin-bottom:4px;">Kauani</p>
-      <a href="https://instagram.com/kaka_tattoo08" target="_blank" rel="noopener noreferrer" style="
-        font-family:'Outfit',sans-serif;font-size:11px;letter-spacing:0.15em;
-        text-transform:uppercase;color:#A8A6A3;text-decoration:none;
-        display:flex;align-items:center;gap:6px;transition:color 0.2s;
-      " onmouseover="this.style.color='#EDEEE9'" onmouseout="this.style.color='#A8A6A3'">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.8"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>
+      <p class="artist-name">Kauani</p>
+      <a href="https://instagram.com/kaka_tattoo08" target="_blank" rel="noopener noreferrer" class="artist-ig">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.8"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>
         @kaka_tattoo08
       </a>
-      <a href="https://wa.me/5548999497760?text=Olá!%20Gostaria%20de%20agendar%20um%20horário." target="_blank" rel="noopener noreferrer" style="
-        width:100%;
-        display:flex;align-items:center;justify-content:center;gap:8px;
-        padding:12px 16px;
-        font-family:'Outfit',sans-serif;font-size:11px;font-weight:500;
-        letter-spacing:0.12em;text-transform:uppercase;
-        background:#EDEEE9;color:#151414;text-decoration:none;
-        margin-top:4px;transition:background 0.25s,color 0.25s;
-      " onmouseover="this.style.background='#d8d9d4'" onmouseout="this.style.background='#EDEEE9'">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.978-1.41A9.953 9.953 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" stroke="#25D366" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      <a href="https://wa.me/5548999497760?text=Olá!%20Gostaria%20de%20agendar%20um%20horário." target="_blank" rel="noopener noreferrer" class="artist-cta">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.978-1.41A9.953 9.953 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" stroke="#25D366" stroke-width="1.8" stroke-linejoin="round"/></svg>
         Agende agora!
       </a>
     </div>
 
     <!-- Card 4 -->
-    <div style="
-      background:#1e1d1d;
-      border:1px solid #EDEEE9;
-      width:min(260px,85vw);
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      padding:28px 24px 24px;
-      gap:12px;
-    ">
-      <div style="
-        width:110px;height:110px;
-        border:1px solid #A8A6A3;
-        overflow:hidden;
-        background:#2a2929;
-        display:flex;align-items:center;justify-content:center;
-      ">
-        <img src="imagem/card4.png" alt="Foto artista 4" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=\'font-size:10px;letter-spacing:0.1em;color:#A8A6A3;text-transform:uppercase\'>foto</span>'" style="width:100%;height:100%;object-fit:cover;">
+    <div class="artist-card">
+      <div class="artist-photo">
+        <img src="imagem/card4.png" alt="Foto artista 4" class="js-artist-photo">
       </div>
-        <p style="font-family:'Playfair Display',serif;font-size:16px;color:#EDEEE9;margin-bottom:4px;">João Victor</p>
-      <a href="https://instagram.com/jotavtattooo" target="_blank" rel="noopener noreferrer" style="
-        font-family:'Outfit',sans-serif;font-size:11px;letter-spacing:0.15em;
-        text-transform:uppercase;color:#A8A6A3;text-decoration:none;
-        display:flex;align-items:center;gap:6px;transition:color 0.2s;
-      " onmouseover="this.style.color='#EDEEE9'" onmouseout="this.style.color='#A8A6A3'">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.8"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>
+      <p class="artist-name">João Victor</p>
+      <a href="https://instagram.com/jotavtattooo" target="_blank" rel="noopener noreferrer" class="artist-ig">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.8"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>
         @jotavtattooo
       </a>
-      <a href="https://wa.me/5551998641474?text=Olá!%20Gostaria%20de%20agendar%20um%20horário." target="_blank" rel="noopener noreferrer" style="
-        width:100%;
-        display:flex;align-items:center;justify-content:center;gap:8px;
-        padding:12px 16px;
-        font-family:'Outfit',sans-serif;font-size:11px;font-weight:500;
-        letter-spacing:0.12em;text-transform:uppercase;
-        background:#EDEEE9;color:#151414;text-decoration:none;
-        margin-top:4px;transition:background 0.25s,color 0.25s;
-      " onmouseover="this.style.background='#d8d9d4'" onmouseout="this.style.background='#EDEEE9'">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.978-1.41A9.953 9.953 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" stroke="#25D366" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      <a href="https://wa.me/5551998641474?text=Olá!%20Gostaria%20de%20agendar%20um%20horário." target="_blank" rel="noopener noreferrer" class="artist-cta">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.978-1.41A9.953 9.953 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" stroke="#25D366" stroke-width="1.8" stroke-linejoin="round"/></svg>
         Agende agora!
       </a>
     </div>
@@ -787,86 +913,42 @@
 </div>
 
 <!-- GALLERY OVERLAY -->
-<div id="gallery-overlay" class="overlay-fade" style="
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.92);
-  z-index:9999;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-">
+<div id="gallery-overlay" class="overlay-fade ov-base" role="dialog" aria-modal="true" aria-label="Galeria de fotos do estúdio" tabindex="-1">
   <!-- Close button -->
-  <button onclick="closeGallery()" style="
-    position:fixed;
-    top:20px;
-    right:24px;
-    background:none;
-    border:none;
-    color:#EDEEE9;
-    font-size:28px;
-    cursor:pointer;
-    line-height:1;
-    font-family:'Outfit',sans-serif;
-    letter-spacing:0.05em;
-    opacity:0.7;
-    transition:opacity 0.2s;
-    z-index:2;
-  " onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">✕</button>
+  <button type="button" class="ov-close" id="btnCloseGallery" aria-label="Fechar">✕</button>
 
   <!-- Counter -->
-  <div id="gallery-counter" style="
-    position:absolute;
-    top:22px;
-    left:50%;
-    transform:translateX(-50%);
-    font-family:'Outfit',sans-serif;
-    font-size:11px;
-    letter-spacing:0.3em;
-    text-transform:uppercase;
-    color:#A8A6A3;
-  "></div>
+  <div id="gallery-counter" class="gallery-counter" aria-live="polite"></div>
 
   <!-- Image -->
-  <img id="gallery-img" src="" alt="Estúdio" style="
-    max-width:min(88vw,700px);
-    max-height:72vh;
-    object-fit:contain;
-    display:block;
-    opacity:0;
-  ">
+  <img id="gallery-img" src="" alt="Estúdio" class="gallery-img">
 
   <!-- Prev / Next -->
-  <div style="display:flex;gap:32px;margin-top:28px;align-items:center;">
-    <button onclick="prevSlide()" style="
-      background:none;
-      border:1px solid #EDEEE9;
-      color:#EDEEE9;
-      width:44px;height:44px;
-      cursor:pointer;
-      font-size:18px;
-      display:flex;align-items:center;justify-content:center;
-      transition:background 0.25s,color 0.25s;
-    " onmouseover="this.style.background='#EDEEE9';this.style.color='#151414'" onmouseout="this.style.background='none';this.style.color='#EDEEE9'">←</button>
+  <div class="gallery-nav">
+    <button type="button" id="btnPrevSlide" class="gallery-arrow" aria-label="Foto anterior">←</button>
 
     <!-- Dots -->
-    <div id="gallery-dots" style="display:flex;gap:8px;align-items:center;"></div>
+    <div id="gallery-dots" class="gallery-dots"></div>
 
-    <button onclick="nextSlide()" style="
-      background:none;
-      border:1px solid #EDEEE9;
-      color:#EDEEE9;
-      width:44px;height:44px;
-      cursor:pointer;
-      font-size:18px;
-      display:flex;align-items:center;justify-content:center;
-      transition:background 0.25s,color 0.25s;
-    " onmouseover="this.style.background='#EDEEE9';this.style.color='#151414'" onmouseout="this.style.background='none';this.style.color='#EDEEE9'">→</button>
+    <button type="button" id="btnNextSlide" class="gallery-arrow" aria-label="Próxima foto">→</button>
   </div>
 </div>
 
 <script>
+  // ── Pausar/retomar a esteira rolante ao clicar (toggle) ──
+  const tickerStrip = document.getElementById('tickerStrip');
+  function toggleTicker() {
+    const paused = tickerStrip.classList.toggle('is-paused');
+    tickerStrip.setAttribute('aria-pressed', paused ? 'true' : 'false');
+  }
+  tickerStrip.addEventListener('click', toggleTicker);
+  tickerStrip.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      toggleTicker();
+    }
+  });
+
   const TOTAL = 11;
   let current = 0;
 
@@ -874,14 +956,11 @@
     const dotsEl = document.getElementById('gallery-dots');
     dotsEl.innerHTML = '';
     for (let i = 0; i < TOTAL; i++) {
-      const d = document.createElement('span');
-      d.style.cssText = `
-        width:6px;height:6px;border-radius:50%;
-        background:${i === current ? '#EDEEE9' : '#A8A6A3'};
-        display:inline-block;cursor:pointer;
-        transition:background 0.2s;
-      `;
-      d.onclick = () => goTo(i);
+      const d = document.createElement('button');
+      d.type = 'button';
+      d.className = 'gallery-dot' + (i === current ? ' is-active' : '');
+      d.setAttribute('aria-label', `Ir para foto ${i + 1}`);
+      d.addEventListener('click', () => goTo(i));
       dotsEl.appendChild(d);
     }
   }
@@ -927,22 +1006,50 @@
     updateGallery();
   }
 
-  // ── utilitário de fade para overlays ──
+  // ── utilitário de fade + foco para overlays (acessibilidade) ──
+  let lastFocusedEl = null;
+
+  function getFocusable(el) {
+    return Array.from(el.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'));
+  }
+
+  function trapFocus(e) {
+    const el = e.currentTarget;
+    if (e.key !== 'Tab') return;
+    const focusables = getFocusable(el);
+    if (!focusables.length) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
   function openOverlay(id) {
     const el = document.getElementById(id);
+    lastFocusedEl = document.activeElement;
     el.style.display = 'flex';
     // força reflow antes de adicionar a classe pra transição funcionar
     el.offsetHeight;
     el.classList.add('is-open');
     document.body.style.overflow = 'hidden';
+    el.addEventListener('keydown', trapFocus);
+    // move o foco pro overlay assim que a transição visual começa
+    requestAnimationFrame(() => el.focus());
   }
 
   function closeOverlay(id) {
     const el = document.getElementById(id);
     el.classList.remove('is-open');
+    el.removeEventListener('keydown', trapFocus);
     el.addEventListener('transitionend', () => {
       el.style.display = 'none';
       document.body.style.overflow = '';
+      if (lastFocusedEl) lastFocusedEl.focus();
     }, { once: true });
   }
 
@@ -970,6 +1077,7 @@
     if (!isMobile) {
       const availH = Math.floor(window.innerHeight * 0.75);
       nativeWrap.innerHTML = `<iframe
+        title="Guia de cuidados com a tattoo (PDF)"
         src="${pdfPath}#toolbar=1&navpanes=0&scrollbar=1&view=FitH"
         style="width:100%;height:${availH}px;border:1px solid #2a2929;display:block;"
         frameborder="0">
@@ -981,12 +1089,8 @@
 
     // Mobile: PDF.js renderiza como canvas
     nativeWrap.innerHTML = `
-      <div id="pdf-loading" style="
-        display:flex;flex-direction:column;align-items:center;justify-content:center;
-        height:200px;gap:12px;color:#A8A6A3;
-        font-family:'Outfit',sans-serif;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;
-      ">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="animation:spin 1s linear infinite;">
+      <div id="pdf-loading" class="pdf-loading">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="pdf-spinner" aria-hidden="true">
           <circle cx="12" cy="12" r="10" stroke="#2a2929" stroke-width="2"/>
           <path d="M12 2a10 10 0 0 1 10 10" stroke="#A8A6A3" stroke-width="2" stroke-linecap="round"/>
         </svg>
@@ -994,13 +1098,6 @@
       </div>
       <div id="pdf-pages" style="display:flex;flex-direction:column;gap:8px;width:100%;"></div>
     `;
-
-    if (!document.getElementById('pdf-spin-style')) {
-      const s = document.createElement('style');
-      s.id = 'pdf-spin-style';
-      s.textContent = '@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }';
-      document.head.appendChild(s);
-    }
 
     const script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
@@ -1034,16 +1131,12 @@
         nativeWrap.dataset.loaded = '1';
       }).catch(() => {
         document.getElementById('pdf-loading').innerHTML =
-          `<p style="color:#A8A6A3;font-family:'Outfit',sans-serif;font-size:12px;text-align:center;padding:20px;">
-            Não foi possível carregar a prévia.<br>Use o botão abaixo para abrir o PDF.
-          </p>`;
+          `<p class="pdf-error">Não foi possível carregar a prévia.<br>Use o botão abaixo para abrir o PDF.</p>`;
       });
     };
     script.onerror = () => {
       document.getElementById('pdf-loading').innerHTML =
-        `<p style="color:#A8A6A3;font-family:'Outfit',sans-serif;font-size:12px;text-align:center;padding:20px;">
-          Não foi possível carregar a prévia.<br>Use o botão abaixo para abrir o PDF.
-        </p>`;
+        `<p class="pdf-error">Não foi possível carregar a prévia.<br>Use o botão abaixo para abrir o PDF.</p>`;
     };
     document.head.appendChild(script);
 
@@ -1054,10 +1147,6 @@
     closeOverlay('cuidados-overlay');
   }
 
-  document.getElementById('cuidados-overlay').addEventListener('click', function(e) {
-    if (e.target === this) closeCuidados();
-  });
-
   function openArtists() {
     openOverlay('artists-overlay');
   }
@@ -1066,11 +1155,41 @@
     closeOverlay('artists-overlay');
   }
 
-  document.getElementById('artists-overlay').addEventListener('click', function(e) {
-    if (e.target === this) closeArtists();
+  // ── fallback de imagem dos cards de artista (substitui onerror inline) ──
+  document.querySelectorAll('.js-artist-photo').forEach(img => {
+    img.addEventListener('error', function () {
+      this.style.display = 'none';
+      const fallback = document.createElement('span');
+      fallback.className = 'artist-photo-fallback';
+      fallback.textContent = 'foto';
+      this.parentElement.appendChild(fallback);
+    }, { once: true });
   });
 
-  // Keyboard navigation
+  // ── conecta os botões que disparam os overlays (substitui onclick inline) ──
+  document.getElementById('btnOpenArtists').addEventListener('click', openArtists);
+  document.getElementById('btnOpenGallery').addEventListener('click', openGallery);
+  document.getElementById('btnOpenCuidados').addEventListener('click', openCuidados);
+
+  document.getElementById('btnCloseArtists').addEventListener('click', closeArtists);
+  document.getElementById('btnCloseGallery').addEventListener('click', closeGallery);
+  document.getElementById('btnCloseCuidados').addEventListener('click', closeCuidados);
+
+  document.getElementById('btnPrevSlide').addEventListener('click', prevSlide);
+  document.getElementById('btnNextSlide').addEventListener('click', nextSlide);
+
+  // Clique fora do conteúdo fecha o overlay correspondente
+  document.getElementById('cuidados-overlay').addEventListener('click', function (e) {
+    if (e.target === this) closeCuidados();
+  });
+  document.getElementById('artists-overlay').addEventListener('click', function (e) {
+    if (e.target === this) closeArtists();
+  });
+  document.getElementById('gallery-overlay').addEventListener('click', function (e) {
+    if (e.target === this && this.classList.contains('is-open')) closeGallery();
+  });
+
+  // Navegação por teclado
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       if (document.getElementById('cuidados-overlay').classList.contains('is-open')) { closeCuidados(); return; }
@@ -1081,17 +1200,11 @@
     if (e.key === 'ArrowRight') nextSlide();
     if (e.key === 'ArrowLeft') prevSlide();
   });
-
-  // Click outside image to close
-  document.getElementById('gallery-overlay').addEventListener('click', function(e) {
-    if (e.target === this && this.classList.contains('is-open')) closeGallery();
-  });
 </script>
 
 <a href="https://wa.me/5548999899588" target="_blank" rel="noopener noreferrer" class="whatsapp-float" aria-label="WhatsApp">
   <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.978-1.41A9.953 9.953 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/>
-    <path d="M8.5 9.5c.5 1 1.5 3 3.5 4s3-1 3-1-.5-1.5-1-1.5S13 12 12.5 12 10 10 9.5 9c-.5-1 0-1.5 0-1.5H8.5S8 8.5 8.5 9.5z" fill="#25D366"/>
+    <path fill="white" d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.77.46 3.45 1.34 4.95L2 22l5.29-1.38a9.9 9.9 0 0 0 4.75 1.21h.01c5.46 0 9.9-4.45 9.9-9.91C21.96 6.45 17.5 2 12.04 2zm4.78 12.42c-.25-.12-1.47-.72-1.7-.81-.23-.08-.39-.12-.56.13-.17.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.04-.38-1.98-1.22-.73-.65-1.23-1.46-1.37-1.71-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.14.16-.25.25-.41.08-.17.04-.31-.02-.44-.06-.13-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.42-.14 0-.31 0-.48 0-.17 0-.44.06-.67.31-.23.25-.87.85-.87 2.08 0 1.23.89 2.42 1.02 2.59.12.17 1.75 2.67 4.24 3.74.59.26 1.05.41 1.41.53.59.19 1.13.16 1.55.1.47-.07 1.47-.6 1.68-1.18.21-.58.21-1.08.15-1.18-.06-.1-.23-.16-.48-.28z"/>
   </svg>
 </a>
 
